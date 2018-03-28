@@ -21,11 +21,9 @@ TODO(@tfboyd)
 
 ### Step 1: Install Prerequisites
 
-[Install TensorFlow.](https://www.tensorflow.org/install/)
-
-Install TensorRT: TODO(@tfboyd)
-
-We use the [Official version of ResNet image preprocessing](/official/resnet/imagenet_preprocessing.py). Please checkout the Models repository if you haven't
+1. [Install TensorFlow.](https://www.tensorflow.org/install/)
+2. Install TensorRT: TODO(@tfboyd)
+3. We use the [Official version of ResNet image preprocessing](/official/resnet/imagenet_preprocessing.py). Please checkout the Models repository if you haven't
 already, and add the Official Models to your Python path:
 
 ```
@@ -40,8 +38,9 @@ The provided script runs with the [Official version of ResNet trained with
 ImageNet data](/official/resnet), but can be used for other models as well,
 as long as you have a SavedModel or a Frozen Graph.
 
-You can download the ResNet-ImageNet [SavedModel](TODO(karmel)) or
-[Frozen Graph](TODO(karmel)), or, if you want to train the model yourself,
+You can download the ResNetv2-ImageNet [SavedModel](http://download.tensorflow.org/models/official/resnetv2_imagenet_savedmodel.tar.gz)
+or [Frozen Graph](http://download.tensorflow.org/models/official/resnetv2_imagenet_frozen_graph.pb),
+or, if you want to train the model yourself,
 pass `--export_dir` to the Official ResNet [imagenet_main.py](/official/resnet/imagenet_main.py).
 
 When running this script, you can pass in a SavedModel directory containing the
@@ -118,9 +117,18 @@ TODO(tfboyd): Numbers/testing for int8?
 ### GPU/Precision Compatibility
 
 Not all GPUs support the ops required for all precisions. For example, running
-int8 precision on a NVIDIA P100 will result in a segfault:
+INT8 precision on a NVIDIA P100 will result in a segfault:
 
 ```
 E tensorflow/contrib/tensorrt/log/trt_logger.cc:38] DefaultLogger Parameter check failed at: Network.cpp::addScale::118, condition: shift.count == 0 || shift.count == weightCount
 Segmentation fault (core dumped)
 ```
+
+## Model Links
+[ResNet-v2-ImageNet Frozen Graph](http://download.tensorflow.org/models/official/resnetv2_imagenet_frozen_graph.pb)
+
+[ResNet-v2-ImageNet SavedModel](http://download.tensorflow.org/models/official/resnetv2_imagenet_savedmodel.tar.gz)
+
+[ResNet-v2-ImageNet Frozen Graph](http://download.tensorflow.org/models/official/resnetv1_imagenet_frozen_graph.pb)
+
+[ResNet-v2-ImageNet SavedModel](http://download.tensorflow.org/models/official/resnetv2_imagenet_savedmodel.tar.gz)
