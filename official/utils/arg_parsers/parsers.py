@@ -65,17 +65,17 @@ import tensorflow as tf
 
 def parse_dtype_info(flags):
   flags.dtype = {
-    "fp16": tf.float16,
-    "float16": tf.float16,
-    "fp32": tf.float32,
-    "float32": tf.float32,
+      "fp16": tf.float16,
+      "float16": tf.float16,
+      "fp32": tf.float32,
+      "float32": tf.float32,
   }.get(flags.dtype, flags.dtype)
 
-  if flags.dtype is None:
-    raise ValueError("Invalid dtype: {}".format(dtype_str))
+  if flags.dtype is None or isinstance(flags.dtype, str):
+    raise ValueError("Invalid dtype: {}".format(flags.dtype))
 
   if flags.loss_scale is None:
-    flags.loss_scale = 128 if flags.dtype is tf.float16 else 1
+    flags.loss_scale = 128 if flags.dtype == tf.float16 else 1
 
 
 class BaseParser(argparse.ArgumentParser):
@@ -223,9 +223,9 @@ class PerformanceParser(argparse.ArgumentParser):
           "--dtype", "-dt",
           default="fp32",
           choices=["fp16", "float16", "fp32", "float32"],
-          help = "[default: %(default)s] {%(choices)s} The TensorFlow datatype "
-                 "used for calculations. Variables may be cast to a higher"
-                 "precision on a case-by-case basis for numerical stability.",
+          help="[default: %(default)s] {%(choices)s} The TensorFlow datatype "
+               "used for calculations. Variables may be cast to a higher"
+               "precision on a case-by-case basis for numerical stability.",
           metavar="<DT>"
       )
 

@@ -214,11 +214,10 @@ def resnet_model_fn(dtype, features, labels, mode, model_class,
   # Generate a summary node for the images
   tf.summary.image('images', features, max_outputs=6)
 
-  if dtype is tf.float16:
+  if dtype == tf.float16:
     features = tf.cast(features, tf.float16)
 
-  model = model_class(resnet_size, data_format, version=version,
-                      use_fp16=use_fp16)
+  model = model_class(resnet_size, data_format, version=version, dtype=dtype)
 
   logits = model(features, mode == tf.estimator.ModeKeys.TRAIN)
 
@@ -383,13 +382,13 @@ def resnet_main(flags, model_function, input_function, shape=None):
   classifier = tf.estimator.Estimator(
       model_fn=model_function, model_dir=flags.model_dir, config=run_config,
       params={
+          'dtype': flags.dtype,
           'resnet_size': flags.resnet_size,
           'data_format': flags.data_format,
           'batch_size': flags.batch_size,
           'multi_gpu': flags.multi_gpu,
           'version': flags.version,
-          'use_fp16': flags.use_fp16,
-          'fp16_loss_scale': flags.fp16_loss_scale,
+          'loss_scale': flags.loss_scale
       })
 
   if flags.benchmark_log_dir is not None:
@@ -480,5 +479,8 @@ class ResnetArgParser(argparse.ArgumentParser):
   def parse_args(self, args=None, namespace=None):
     args = super(ResnetArgParser, self).parse_args(
         args=args, namespace=namespace)
+
+    # handle coupling between dtype and loss_scale
     parsers.parse_dtype_info(args)
+
     return args

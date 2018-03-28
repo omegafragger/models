@@ -352,7 +352,7 @@ class Model(object):
                conv_stride, first_pool_size, first_pool_stride,
                second_pool_size, second_pool_stride, block_sizes, block_strides,
                final_size, version=DEFAULT_VERSION, data_format=None,
-               use_fp16=False):
+               dtype=None):
     """Creates a model for classifying an image.
 
     Args:
@@ -380,7 +380,8 @@ class Model(object):
         See README for details. Valid values: [1, 2]
       data_format: Input format ('channels_last', 'channels_first', or None).
         If set to None, the format is dependent on whether a GPU is available.
-      use_fp16: If True, use fp16 tensors in the model.
+      dtype: The TensorFlow dtype to use for calculations. If not specified
+        tf.float32 is used.
 
     Raises:
       ValueError: if invalid version is selected.
@@ -420,9 +421,9 @@ class Model(object):
     self.block_sizes = block_sizes
     self.block_strides = block_strides
     self.final_size = final_size
-    self.use_fp16 = use_fp16
+    self.dtype = dtype or tf.float32
 
-  def _fp16_custom_getter(self, getter, name, shape=None, dtype=tf.float32,
+  def _custom_getter(self, getter, name, shape=None, dtype=tf.float32,
                           *args, **kwargs):
     """Creates variables in fp32, then casts to fp16 if necessary.
 
@@ -472,8 +473,8 @@ class Model(object):
       A variable scope for the model.
     """
 
-    custom_getter = self._fp16_custom_getter if self.use_fp16 else None
-    return tf.variable_scope('resnet_model', custom_getter=custom_getter)
+    getter = self._fp16_custom_getter if self.dtype == tf.float16 else None
+    return tf.variable_scope('resnet_model', custom_getter=getter)
 
   def __call__(self, inputs, training):
     """Add operations to classify a batch of input images.
