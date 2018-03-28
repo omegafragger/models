@@ -58,8 +58,27 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-
 import argparse
+
+import tensorflow as tf
+
+
+def parse_dtype_info(flags):
+  dtype = {
+    "fp16": tf.float16,
+    "float16": tf.float16,
+    "fp32": tf.float32,
+    "float32": tf.float32,
+  }.get(flags.dtype)
+
+  if dtype is None:
+    raise ValueError("Invalid dtype: {}".format(dtype_str))
+
+  loss_scale = flags.loss_scale
+  if loss_scale is None:
+    loss_scale = 128 if dtype is tf.float16 else 1
+
+  return dtype, loss_scale
 
 
 class BaseParser(argparse.ArgumentParser):
@@ -149,7 +168,7 @@ class PerformanceParser(argparse.ArgumentParser):
 
   def __init__(self, add_help=False, num_parallel_calls=True, inter_op=True,
                intra_op=True, use_synthetic_data=True, max_train_steps=True,
-               float16=True, dtype=True):
+               dtype=True):
     super(PerformanceParser, self).__init__(add_help=add_help)
 
     if num_parallel_calls:
@@ -202,32 +221,29 @@ class PerformanceParser(argparse.ArgumentParser):
           metavar="<MTS>"
       )
 
-    if float16:
-      self.add_argument(
-          "--use_fp16", "-fp16", action="store_true",
-          help="If set, run the model using fp16 tensors instead of fp32 "
-               "tensors."
-      )
-
-      self.add_argument(
-          "--fp16_loss_scale", type=int, default=128,
-          help="[default: %(default)s] The amount to scale the loss by when "
-               "the model is run in fp16. Before gradients are computed, the "
-               "loss is multiplied by the loss scale, making all gradients "
-               "loss_scale times larger. To adjust for this, gradients are "
-               "divided by the loss scale before being applied to variables. "
-               "This is mathematically equivalent to training without a loss "
-               "scale, but the loss scale helps avoid some intermediate "
-               "gradients from underflowing to zero.",
-          metavar="<FP16LS>"
-      )
-
     if dtype:
       self.add_argument(
           "--dtype", "-dt",
           default="fp32",
-          choices=["fp16", "fp32"],
-          help = "[default: %(default)s] [choices: {%(choices)s}]"
+          choices=["fp16", "float16", "fp32", "float32"],
+          help = "[default: %(default)s] {%(choices)s} The TensorFlow datatype "
+                 "used for calculations. Variables may be cast to a higher"
+                 "precision on a case-by-case basis for numerical stability.",
+          metavar="<DT>"
+      )
+
+      self.add_argument(
+          "--loss_scale", "-ls",
+          type=int,
+          help="[default: %(default)s] The amount to scale the loss by when "
+               "the model is run. Before gradients are computed, the loss is "
+               "multiplied by the loss scale, making all gradients loss_scale "
+               "times larger. To adjust for this, gradients are divided by the "
+               "loss scale before being applied to variables. This is "
+               "mathematically equivalent to training without a loss scale, "
+               "but the loss scale helps avoid some intermediate gradients "
+               "from underflowing to zero. If not provided the default for "
+               "fp16 is 128 and 1 for all other dtypes.",
       )
 
 
