@@ -149,7 +149,7 @@ class PerformanceParser(argparse.ArgumentParser):
 
   def __init__(self, add_help=False, num_parallel_calls=True, inter_op=True,
                intra_op=True, use_synthetic_data=True, max_train_steps=True,
-               float16=True):
+               float16=True, dtype=True):
     super(PerformanceParser, self).__init__(add_help=add_help)
 
     if num_parallel_calls:
@@ -220,6 +220,14 @@ class PerformanceParser(argparse.ArgumentParser):
                "scale, but the loss scale helps avoid some intermediate "
                "gradients from underflowing to zero.",
           metavar="<FP16LS>"
+      )
+
+    if dtype:
+      self.add_argument(
+          "--dtype", "-dt",
+          default="fp32",
+          choices=["fp16", "fp32"],
+          help = "[default: %(default)s] [choices: {%(choices)s}]"
       )
 
 
