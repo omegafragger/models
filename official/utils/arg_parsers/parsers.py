@@ -64,21 +64,18 @@ import tensorflow as tf
 
 
 def parse_dtype_info(flags):
-  dtype = {
+  flags.dtype = {
     "fp16": tf.float16,
     "float16": tf.float16,
     "fp32": tf.float32,
     "float32": tf.float32,
-  }.get(flags.dtype)
+  }.get(flags.dtype, flags.dtype)
 
-  if dtype is None:
+  if flags.dtype is None:
     raise ValueError("Invalid dtype: {}".format(dtype_str))
 
-  loss_scale = flags.loss_scale
-  if loss_scale is None:
-    loss_scale = 128 if dtype is tf.float16 else 1
-
-  return dtype, loss_scale
+  if flags.loss_scale is None:
+    flags.loss_scale = 128 if flags.dtype is tf.float16 else 1
 
 
 class BaseParser(argparse.ArgumentParser):

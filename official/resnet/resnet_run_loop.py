@@ -168,9 +168,9 @@ def learning_rate_with_decay(
   return learning_rate_fn
 
 
-def resnet_model_fn(features, labels, mode, model_class,
+def resnet_model_fn(dtype, features, labels, mode, model_class,
                     resnet_size, weight_decay, learning_rate_fn, momentum,
-                    data_format, version, use_fp16, fp16_loss_scale,
+                    data_format, version, loss_scale,
                     loss_filter_fn=None, multi_gpu=False):
   """Shared functionality for different resnet model_fns.
 
@@ -182,6 +182,7 @@ def resnet_model_fn(features, labels, mode, model_class,
   a train op, but with the necessary parameters for the given mode.
 
   Args:
+    dtype: the TensorFlow dtype to use for calculations.
     features: tensor representing input images
     labels: tensor representing class labels for all input images
     mode: current estimator mode; should be one of
@@ -197,8 +198,7 @@ def resnet_model_fn(features, labels, mode, model_class,
       If set to None, the format is dependent on whether a GPU is available.
     version: Integer representing which version of the ResNet network to use.
       See README for details. Valid values: [1, 2]
-    use_fp16: If True, use fp16 tensors in the model.
-    fp16_loss_scale: The factor to scale the loss by when fp16 tensors are used.
+    loss_scale: The factor to scale the loss for numerical stability.
     loss_filter_fn: function that takes a string variable name and returns
       True if the var should be included in loss calculation, and False
       otherwise. If None, batch_normalization variables will be excluded
@@ -214,7 +214,7 @@ def resnet_model_fn(features, labels, mode, model_class,
   # Generate a summary node for the images
   tf.summary.image('images', features, max_outputs=6)
 
-  if use_fp16:
+  if dtype is tf.float16:
     features = tf.cast(features, tf.float16)
 
   model = model_class(resnet_size, data_format, version=version,
@@ -222,8 +222,8 @@ def resnet_model_fn(features, labels, mode, model_class,
 
   logits = model(features, mode == tf.estimator.ModeKeys.TRAIN)
 
-  # This acts as a no-op if the logits are already in fp32. If use_fp16 is True,
-  # logits will be in fp16, and must be casted to fp32 for numerical stability.
+  # This acts as a no-op if the logits are already in fp32. If dtype is
+  # tf.float16, logits must be casted to fp32 for numerical stability.
   logits = tf.cast(logits, tf.float32)
 
   predictions = {
@@ -278,13 +278,12 @@ def resnet_model_fn(features, labels, mode, model_class,
     if multi_gpu:
       optimizer = tf.contrib.estimator.TowerOptimizer(optimizer)
 
-    if use_fp16:
+    if loss_scale != 1:
       # When computing fp16 gradients, often intermediate tensor values are
       # so small, they underflow to 0. To avoid this, we multiply the loss by
-      # fp16_loss_scale to make these tensor values fp16_loss_scales times
-      # bigger.
-      scaled_grad_vars = optimizer.compute_gradients(loss * fp16_loss_scale)
-      unscaled_grad_vars = [(grad / fp16_loss_scale, var)
+      # loss_scale to make these tensor values loss_scales times bigger.
+      scaled_grad_vars = optimizer.compute_gradients(loss * loss_scale)
+      unscaled_grad_vars = [(grad / loss_scale, var)
                             for grad, var in scaled_grad_vars]
       minimize_op = optimizer.apply_gradients(unscaled_grad_vars, global_step)
     else:
@@ -477,3 +476,9 @@ class ResnetArgParser(argparse.ArgumentParser):
         help='[default: %(default)s] The size of the ResNet model to use.',
         metavar='<RS>' if resnet_size_choices is None else None
     )
+
+  def parse_args(self, args=None, namespace=None):
+    args = super(ResnetArgParser, self).parse_args(
+        args=args, namespace=namespace)
+    parsers.parse_dtype_info(args)
+    return args
