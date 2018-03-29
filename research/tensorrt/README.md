@@ -77,9 +77,9 @@ as the TensorRT version of the graph at precisions of fp32, fp16, and int8):
 INFO:tensorflow:Starting timing.
 INFO:tensorflow:Timing loop done!
 Predictions:
-Precision:  native [u'Doberman, Doberman pinscher', u'briard', u'otterhound, otter hound', u'komondor', u'malamute, malemute, Alaskan malamute']
-Precision:  FP32 [u'Doberman, Doberman pinscher', u'briard', u'otterhound, otter hound', u'komondor', u'malamute, malemute, Alaskan malamute']
-Precision:  FP16 [u'Doberman, Doberman pinscher', u'briard', u'otterhound, otter hound', u'komondor', u'malamute, malemute, Alaskan malamute']
+Precision:  native [u'miniature poodle', u'toy poodle', u'Bedlington terrier', u'standard poodle', u'Old English sheepdog, bobtail']
+Precision:  FP32 [u'miniature poodle', u'toy poodle', u'Bedlington terrier', u'standard poodle', u'Old English sheepdog, bobtail']
+Precision:  FP16 [u'miniature poodle', u'toy poodle', u'Bedlington terrier', u'standard poodle', u'Old English sheepdog, bobtail']
 ```
 
 The script will generate or append to a file in the output_dir, `log.txt`,

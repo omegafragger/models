@@ -303,22 +303,26 @@ def log_stats(graph_name, log_buffer, timings, batch_size):
   return [speed_mean, time_99th]
 
 
-def time_and_log_graph(graph_name, graph_def, data, log_buffer, flags):
+def time_and_log_graph(graph_name, graph_def, data, log_buffer, flags,
+                       num_loops=None):
+  # Allow over-writing of num_loops
+  num_loops = num_loops or flags.num_loops
+
   timings, result = time_graph(
       graph_def, data, flags.input_node, flags.output_nodes,
-      num_loops=flags.num_loops)
+      num_loops=num_loops)
   log_stats(graph_name, log_buffer, timings, flags.batch_size)
 
   return result
 
 
 def run_trt_graph_for_mode(graph_name, graph_def, mode, data, log_buffer, flags,
-                           save_name=None):
+                           save_name=None, num_loops=None):
   g_name = save_name or get_tftrt_name(graph_name, mode)
   graph = get_trt_graph(
       g_name, graph_def, mode, flags.output_dir, flags.output_nodes,
       flags.batch_size, flags.workspace_size)
-  result = time_and_log_graph(g_name, graph, data, log_buffer, flags)
+  result = time_and_log_graph(g_name, graph, data, log_buffer, flags, num_loops)
   return graph, result
 
 
@@ -419,7 +423,7 @@ def main(argv):
     save_name = get_tftrt_name(graph_name, calib_mode)
     graph, result = run_trt_graph_for_mode(
         graph_name, frozen_graph_def, mode, data, log_buffer, flags,
-        save_name=save_name)
+        save_name=save_name, num_loops=1)
     results.append((calib_mode, result))
 
     g_name = get_tftrt_name(graph_name, mode)
