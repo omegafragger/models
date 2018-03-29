@@ -80,6 +80,7 @@ Predictions:
 Precision:  native [u'miniature poodle', u'toy poodle', u'Bedlington terrier', u'standard poodle', u'Old English sheepdog, bobtail']
 Precision:  FP32 [u'miniature poodle', u'toy poodle', u'Bedlington terrier', u'standard poodle', u'Old English sheepdog, bobtail']
 Precision:  FP16 [u'miniature poodle', u'toy poodle', u'Bedlington terrier', u'standard poodle', u'Old English sheepdog, bobtail']
+INT8 [u'standard poodle', u'Bedlington terrier', u'miniature poodle', u'komondor', u'toy poodle']
 ```
 
 The script will generate or append to a file in the output_dir, `log.txt`,
@@ -118,8 +119,11 @@ TODO(tfboyd): Numbers/testing for int8?
 
 ### GPU/Precision Compatibility
 
-Not all GPUs support the ops required for all precisions. For example, running
-INT8 precision on a NVIDIA P100 will result in a segfault:
+Not all GPUs support the ops required for all precisions. For example, P100s
+cannot currently run INT8 precision.
+
+Note that currently, int8 mode results in a segfault using the models provided.
+We are working on it.
 
 ```
 E tensorflow/contrib/tensorrt/log/trt_logger.cc:38] DefaultLogger Parameter check failed at: Network.cpp::addScale::118, condition: shift.count == 0 || shift.count == weightCount
