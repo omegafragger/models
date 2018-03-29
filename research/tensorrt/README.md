@@ -22,7 +22,7 @@ TODO(@tfboyd)
 ### Step 1: Install Prerequisites
 
 1. [Install TensorFlow.](https://www.tensorflow.org/install/)
-2. Install TensorRT: TODO(@tfboyd)
+2. [Install TensorRT.](http://docs.nvidia.com/deeplearning/sdk/tensorrt-install-guide/index.html)
 3. We use the [Official version of ResNet image preprocessing](/official/resnet/imagenet_preprocessing.py). Please checkout the Models repository if you haven't
 already, and add the Official Models to your Python path:
 
@@ -45,7 +45,9 @@ pass `--export_dir` to the Official ResNet [imagenet_main.py](/official/resnet/i
 
 When running this script, you can pass in a SavedModel directory containing the
 Protobuf MetaGraphDef and variables directory to `savedmodel_dir`, or pass in
-a Protobuf frozen graph file directly to `frozen_graph`.
+a Protobuf frozen graph file directly to `frozen_graph`. If you downloaded the
+SavedModel linked above, note that you should untar it before passing in to the
+script.
 
 ### Step 3: Get an image to test
 
