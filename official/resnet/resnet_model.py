@@ -473,8 +473,8 @@ class Model(object):
       A variable scope for the model.
     """
 
-    getter = self._fp16_custom_getter if self.dtype == tf.float16 else None
-    return tf.variable_scope('resnet_model', custom_getter=getter)
+    custom_getter = self._custom_getter if self.dtype == tf.float16 else None
+    return tf.variable_scope('resnet_model', custom_getter=custom_getter)
 
   def __call__(self, inputs, training):
     """Add operations to classify a batch of input images.

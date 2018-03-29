@@ -36,7 +36,7 @@ class BaseTest(tf.test.TestCase):
     super(BaseTest, self).tearDown()
     tf.gfile.DeleteRecursively(self.get_temp_dir())
 
-  def _tensor_shapes_helper(self, resnet_size, version, use_fp16, with_gpu):
+  def _tensor_shapes_helper(self, resnet_size, version, dtype, with_gpu):
     """Checks the tensor shapes after each phase of the ResNet model."""
     def reshape(shape):
       """Returns the expected dimensions depending on if a GPU is being used."""
@@ -52,10 +52,10 @@ class BaseTest(tf.test.TestCase):
     with graph.as_default(), self.test_session(
         graph=graph, use_gpu=with_gpu, force_gpu=with_gpu):
       model = imagenet_main.ImagenetModel(
-          resnet_size,
+          resnet_size=resnet_size,
           data_format='channels_first' if with_gpu else 'channels_last',
           version=version,
-          use_fp16=use_fp16
+          dtype=dtype
       )
       inputs = tf.random_uniform([1, 224, 224, 3])
       output = model(inputs, training=True)
@@ -92,9 +92,9 @@ class BaseTest(tf.test.TestCase):
 
   def tensor_shapes_helper(self, resnet_size, version, with_gpu=False):
     self._tensor_shapes_helper(resnet_size=resnet_size, version=version,
-                               use_fp16=False, with_gpu=with_gpu)
+                               dtype=tf.float32, with_gpu=with_gpu)
     self._tensor_shapes_helper(resnet_size=resnet_size, version=version,
-                               use_fp16=True, with_gpu=with_gpu)
+                               dtype=tf.float16, with_gpu=with_gpu)
 
   def test_tensor_shapes_resnet_18_v1(self):
     self.tensor_shapes_helper(18, version=1)
@@ -180,7 +180,7 @@ class BaseTest(tf.test.TestCase):
   def test_tensor_shapes_resnet_200_with_gpu_v2(self):
     self.tensor_shapes_helper(200, version=2, with_gpu=True)
 
-  def _resnet_model_fn_helper(self, mode, version, use_fp16, multi_gpu):
+  def _resnet_model_fn_helper(self, mode, version, dtype, multi_gpu):
     """Tests that the EstimatorSpec is given the appropriate arguments."""
     with tf.Graph().as_default() as g:
       tf.train.create_global_step()
@@ -191,12 +191,12 @@ class BaseTest(tf.test.TestCase):
       features, labels = iterator.get_next()
       spec = imagenet_main.imagenet_model_fn(
           features, labels, mode, {
+              'dtype': dtype,
               'resnet_size': 50,
               'data_format': 'channels_last',
               'batch_size': _BATCH_SIZE,
               'version': version,
-              'use_fp16': use_fp16,
-              'fp16_loss_scale': 128,
+              'loss_scale': 128 if dtype == tf.float16 else 1,
               'multi_gpu': multi_gpu,
           })
 
@@ -219,7 +219,6 @@ class BaseTest(tf.test.TestCase):
         self.assertEqual(eval_metric_ops['accuracy'][0].dtype, tf.float32)
         self.assertEqual(eval_metric_ops['accuracy'][1].dtype, tf.float32)
 
-        expected_dtype = tf.float16 if use_fp16 else tf.float32
         tensors_to_check = ('initial_conv:0', 'initial_max_pool:0',
                             'block_layer1:0', 'block_layer2:0',
                             'block_layer3:0', 'block_layer4:0',
@@ -227,15 +226,15 @@ class BaseTest(tf.test.TestCase):
 
         for tensor_name in tensors_to_check:
           tensor = g.get_tensor_by_name('resnet_model/' + tensor_name)
-          self.assertEqual(tensor.dtype, expected_dtype,
+          self.assertEqual(tensor.dtype, dtype,
                            'Tensor {} has dtype {}, while dtype {} was '
                            'expected'.format(tensor, tensor.dtype,
-                                             expected_dtype))
+                                             dtype))
 
   def resnet_model_fn_helper(self, mode, version, multi_gpu=False):
-    self._resnet_model_fn_helper(mode=mode, version=version, use_fp16=False,
+    self._resnet_model_fn_helper(mode=mode, version=version, dtype=tf.float32,
                                  multi_gpu=multi_gpu)
-    self._resnet_model_fn_helper(mode=mode, version=version, use_fp16=True,
+    self._resnet_model_fn_helper(mode=mode, version=version, dtype=tf.float16,
                                  multi_gpu=multi_gpu)
 
   def test_resnet_model_fn_train_mode_v1(self):

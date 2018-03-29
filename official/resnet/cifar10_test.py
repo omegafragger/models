@@ -71,7 +71,7 @@ class BaseTest(tf.test.TestCase):
         for pixel in row:
           self.assertAllClose(pixel, np.array([-1.225, 0., 1.225]), rtol=1e-3)
 
-  def _cifar10_model_fn_helper(self, mode, version, use_fp16, multi_gpu=False):
+  def _cifar10_model_fn_helper(self, mode, version, dtype, multi_gpu=False):
     with tf.Graph().as_default() as g:
       input_fn = cifar10_main.get_synth_input_fn()
       dataset = input_fn(True, '', _BATCH_SIZE)
@@ -79,12 +79,12 @@ class BaseTest(tf.test.TestCase):
       features, labels = iterator.get_next()
       spec = cifar10_main.cifar10_model_fn(
           features, labels, mode, {
+              'dtype': dtype,
               'resnet_size': 32,
               'data_format': 'channels_last',
               'batch_size': _BATCH_SIZE,
               'version': version,
-              'use_fp16': use_fp16,
-              'fp16_loss_scale': 128,
+              'loss_scale': 128 if dtype == tf.float16 else 1,
               'multi_gpu': multi_gpu
           })
 
@@ -110,22 +110,21 @@ class BaseTest(tf.test.TestCase):
       for v in tf.trainable_variables():
         self.assertEqual(v.dtype.base_dtype, tf.float32)
 
-      expected_dtype = tf.float16 if use_fp16 else tf.float32
       tensors_to_check = ('initial_conv:0', 'block_layer1:0', 'block_layer2:0',
                           'block_layer3:0', 'final_reduce_mean:0',
                           'final_dense:0')
 
       for tensor_name in tensors_to_check:
         tensor = g.get_tensor_by_name('resnet_model/' + tensor_name)
-        self.assertEqual(tensor.dtype, expected_dtype,
+        self.assertEqual(tensor.dtype, dtype,
                          'Tensor {} has dtype {}, while dtype {} was '
                          'expected'.format(tensor, tensor.dtype,
-                                           expected_dtype))
+                                           dtype))
 
   def cifar10_model_fn_helper(self, mode, version, multi_gpu=False):
-    self._cifar10_model_fn_helper(mode=mode, version=version, use_fp16=False,
+    self._cifar10_model_fn_helper(mode=mode, version=version, dtype=tf.float32,
                                   multi_gpu=multi_gpu)
-    self._cifar10_model_fn_helper(mode=mode, version=version, use_fp16=True,
+    self._cifar10_model_fn_helper(mode=mode, version=version, dtype=tf.float16,
                                   multi_gpu=multi_gpu)
 
   def test_cifar10_model_fn_train_mode_v1(self):
