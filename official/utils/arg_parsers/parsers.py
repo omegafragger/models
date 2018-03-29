@@ -64,6 +64,14 @@ import tensorflow as tf
 
 
 def parse_dtype_info(flags):
+  """Convert dtype string to tf dtype, and set loss_scale default as needed.
+
+  Args:
+    flags: namespace object returned by arg parser.
+
+  Raises:
+    ValueError: If an invalid dtype is provided.
+  """
   flags.dtype = {
       "fp16": tf.float16,
       "float16": tf.float16,

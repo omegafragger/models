@@ -424,7 +424,7 @@ class Model(object):
     self.dtype = dtype or tf.float32
 
   def _custom_getter(self, getter, name, shape=None, dtype=tf.float32,
-                          *args, **kwargs):
+                     *args, **kwargs):
     """Creates variables in fp32, then casts to fp16 if necessary.
 
       This function is a custom getter. A custom getter is a function with the
