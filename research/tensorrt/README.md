@@ -9,11 +9,11 @@ Here we provide a sample script that can:
 1. Convert a TensorFlow SavedModel to a Frozen Graph.
 2. Load a Frozen Graph for inference.
 3. Time inference loops using the native TensorFlow graph.
-4. Time inference loops using FP32, FP16, or INT8* precision modes from TensorRT.
+4. Time inference loops using FP32, FP16, or INT8<sup>1</sup> precision modes from TensorRT.
 
 We provide some results below, as well as instructions for running this script.
 
-* INT8 mode is a work in progress; please see [INT8 Mode is the Bleeding Edge](int8-mode-is-the-bleeding-edge) below.
+<sup>1</sup> INT8 mode is a work in progress; please see [INT8 Mode is the Bleeding Edge](#int8-mode-is-the-bleeding-edge) below.
 
 ## How to Run This Script
 
