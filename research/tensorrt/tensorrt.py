@@ -538,7 +538,7 @@ class TensorRTParser(argparse.ArgumentParser):
     )
 
     self.add_argument(
-        "--ids_are_one_indexed", "-ii", type=store_true,
+        "--ids_are_one_indexed", "-ii", type='store_true',
         help="[default: %(default)s] Some ResNet models include a `background` "
         "category, and others do not. If the model used includes `background` "
         "at index 0 in the output and represents all 1001 categories, "
