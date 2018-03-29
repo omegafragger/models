@@ -17,6 +17,7 @@
 See model.py for more details and usage.
 """
 
+import six
 import tensorflow as tf
 from deeplab import common
 from deeplab import model
@@ -194,13 +195,7 @@ def _build_deeplab(inputs_queue, outputs_to_num_classes, ignore_label):
       is_training=True,
       fine_tune_batch_norm=FLAGS.fine_tune_batch_norm)
 
-  # add name to graph node so we can add to summary
-  outputs_to_scales_to_logits[common.OUTPUT_TYPE][model._MERGED_LOGITS_SCOPE] = tf.identity( 
-    outputs_to_scales_to_logits[common.OUTPUT_TYPE][model._MERGED_LOGITS_SCOPE],
-    name = 'semantic_merged_logits'
-  )
-
-  for output, num_classes in outputs_to_num_classes.iteritems():
+  for output, num_classes in six.iteritems(outputs_to_num_classes):
     train_utils.add_softmax_cross_entropy_loss_for_each_scale(
         outputs_to_scales_to_logits[output],
         samples[common.LABEL],
@@ -227,7 +222,7 @@ def main(unused_argv):
   assert FLAGS.train_batch_size % config.num_clones == 0, (
       'Training batch size not divisble by number of clones (GPUs).')
 
-  clone_batch_size = FLAGS.train_batch_size / config.num_clones
+  clone_batch_size = int(FLAGS.train_batch_size / config.num_clones)
 
   # Get dataset-dependent information.
   dataset = segmentation_dataset.get_dataset(
