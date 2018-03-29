@@ -347,12 +347,12 @@ def top_predictions(result, n):
   return ids[:n]
 
 
-def get_labels_for_ids(labels, ids):
+def get_labels_for_ids(labels, ids, ids_are_one_indexed=False):
   """Get the human-readable labels for given ids."""
-  return [labels[str(x + 1)] for x in ids]
+  return [labels[str(x + int(ids_are_one_indexed))] for x in ids]
 
 
-def print_predictions(results, preds_to_print=5):
+def print_predictions(results, ids_are_one_indexed=False, preds_to_print=5):
   """Given an array of mode, graph_name, predicted_ID, print labels."""
   labels = get_labels()
 
@@ -360,7 +360,7 @@ def print_predictions(results, preds_to_print=5):
 
   for mode, result in results:
     pred_ids = top_predictions(result, preds_to_print)
-    pred_labels = get_labels_for_ids(labels, pred_ids)
+    pred_labels = get_labels_for_ids(labels, pred_ids, ids_are_one_indexed)
     print("Precision: ", mode, pred_labels)
 
 
@@ -433,7 +433,8 @@ def main(argv):
     results.append((mode, result))
 
   # Print prediction results to the command line.
-  print_predictions(results, flags.predictions_to_print)
+  print_predictions(
+      results, flags.ids_are_one_indexed, flags.predictions_to_print)
 
 
 class TensorRTParser(argparse.ArgumentParser):
@@ -534,6 +535,16 @@ class TensorRTParser(argparse.ArgumentParser):
         "--workspace_size", "-ws", type=long, default=2<<30,
         help="[default: %(default)s] Workspace size in MB.",
         metavar="<WS>"
+    )
+
+    self.add_argument(
+        "--ids_are_one_indexed", "-ii", type=store_true,
+        help="[default: %(default)s] Some ResNet models include a `background` "
+        "category, and others do not. If the model used includes `background` "
+        "at index 0 in the output and represents all 1001 categories, "
+        "this should be False. If the model used omits the `background` label "
+        "and has only 1000 categories, this should be True.",
+        metavar="<II>"
     )
 
     self.add_argument(

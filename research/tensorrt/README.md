@@ -52,7 +52,7 @@ script.
 ### Step 3: Get an image to test
 
 The script can accept a JPEG image file to use for predictions. If none is
-provided, random data will be generated. We provide a sample `dog.jpg` here
+provided, random data will be generated. We provide a sample `image.jpg` here
 which can be passed in with the `--image_file` flag.
 
 ### Step 4: Run the model
@@ -66,7 +66,7 @@ you would run:
 
 ```
 python tensorrt.py --frozen_graph=resnetv2_imagenet_frozen_graph.pb \
-  --image_file=dog.jpg --native --fp32 --fp16 --int8 --output_dir=/my/output
+  --image_file=image.jpg --native --fp32 --fp16 --int8 --output_dir=/my/output
 ```
 
 This will print the predictions for each of the precision modes that were run
