@@ -305,7 +305,7 @@ def log_stats(graph_name, log_buffer, timings, batch_size):
 
 def time_and_log_graph(graph_name, graph_def, data, log_buffer, flags):
   timings, result = time_graph(
-      graph_def, data, flags.input_node, flags.output_nodes)
+      graph_def, data, flags.input_node, flags.output_nodes, flags.num_loops)
   log_stats(graph_name, log_buffer, timings, flags.batch_size)
 
   return result
@@ -317,7 +317,7 @@ def run_trt_graph_for_mode(
   graph = get_trt_graph(
       g_name, graph_def, mode, flags.output_dir, flags.output_nodes,
       flags.batch_size, flags.workspace_size)
-  result = time_and_log_graph(g_name, graph, data, log_buffer, flags, num_loops)
+  result = time_and_log_graph(g_name, graph, data, log_buffer, flags)
   return result
 
 
@@ -419,7 +419,7 @@ def main(argv):
     graph = get_trt_graph(
         save_name, frozen_graph_def, mode, flags.output_dir, flags.output_nodes,
         flags.batch_size, flags.workspace_size)
-    time_graph(graph, data, flags.input_node, flags.output_nodes)
+    time_graph(graph, data, flags.input_node, flags.output_nodes, num_loops=1)
 
     g_name = get_tftrt_name(graph_name, mode)
     int8_graph = get_trt_graph_from_calib(g_name, graph, flags.output_dir)
