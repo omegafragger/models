@@ -37,6 +37,7 @@ from tensorflow.python.client import timeline
 from official.resnet import imagenet_preprocessing
 
 _GPU_MEM_FRACTION = 0.50
+_WARMUP_NUM_LOOPS = 50
 _LOG_FILE = "log.txt"
 _LABELS_FILE = "labellist.json"
 _GRAPH_FILE = "frozen_graph.pb"
@@ -264,6 +265,11 @@ def time_graph(graph_def, data, input_node, output_nodes, num_loops=100):
 
   timings = []
   with tf.Session(graph=g, config=get_gpu_config()) as sess:
+    tf.logging.info("Starting Warmup cycle")
+
+    for _ in range(_WARMUP_NUM_LOOPS):
+      sess.run([output])
+
     tf.logging.info("Starting timing.")
 
     for _ in range(num_loops):
@@ -273,7 +279,7 @@ def time_graph(graph_def, data, input_node, output_nodes, num_loops=100):
 
     tf.logging.info("Timing loop done!")
 
-    return timings, val[0]
+  return timings, val[0]
 
 
 def log_stats(graph_name, log_buffer, timings, batch_size):
@@ -414,15 +420,15 @@ def main(argv):
   if flags.int8:
     mode = "INT8"
     print("Running {} graph".format(mode))
-    calib_mode = "INT8_calib"
-    save_name = get_tftrt_name(graph_name, calib_mode)
-    graph = get_trt_graph(
+    save_name = get_tftrt_name(graph_name, "INT8_calib")
+    calib_graph = get_trt_graph(
         save_name, frozen_graph_def, mode, flags.output_dir, flags.output_nodes,
         flags.batch_size, flags.workspace_size)
-    time_graph(graph, data, flags.input_node, flags.output_nodes, num_loops=1)
+    time_graph(calib_graph, data, flags.input_node, flags.output_nodes,
+               num_loops=1)
 
     g_name = get_tftrt_name(graph_name, mode)
-    int8_graph = get_trt_graph_from_calib(g_name, graph, flags.output_dir)
+    int8_graph = get_trt_graph_from_calib(g_name, calib_graph, flags.output_dir)
     result = time_and_log_graph(g_name, int8_graph, data, log_buffer, flags)
     results.append((mode, result))
 
