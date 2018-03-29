@@ -9,13 +9,11 @@ Here we provide a sample script that can:
 1. Convert a TensorFlow SavedModel to a Frozen Graph.
 2. Load a Frozen Graph for inference.
 3. Time inference loops using the native TensorFlow graph.
-4. Time inference loops using FP32, FP16, or INT8 precision modes from TensorRT.
+4. Time inference loops using FP32, FP16, or INT8* precision modes from TensorRT.
 
 We provide some results below, as well as instructions for running this script.
 
-## Results
-
-TODO(@tfboyd)
+* INT8 mode is a work in progress; please see [INT8 Mode is the Bleeding Edge](int8-mode-is-the-bleeding-edge) below.
 
 ## How to Run This Script
 
@@ -66,21 +64,20 @@ you would run:
 
 ```
 python tensorrt.py --frozen_graph=resnetv2_imagenet_frozen_graph.pb \
-  --image_file=image.jpg --native --fp32 --fp16 --int8 --output_dir=/my/output
+  --image_file=image.jpg --native --fp32 --fp16 --output_dir=/my/output
 ```
 
 This will print the predictions for each of the precision modes that were run
 (native, which is the native precision of the model passed in, as well
-as the TensorRT version of the graph at precisions of fp32, fp16, and int8):
+as the TensorRT version of the graph at precisions of fp32 and fp16):
 
 ```
 INFO:tensorflow:Starting timing.
 INFO:tensorflow:Timing loop done!
 Predictions:
-Precision:  native [u'miniature poodle', u'toy poodle', u'Bedlington terrier', u'standard poodle', u'Old English sheepdog, bobtail']
-Precision:  FP32 [u'miniature poodle', u'toy poodle', u'Bedlington terrier', u'standard poodle', u'Old English sheepdog, bobtail']
-Precision:  FP16 [u'miniature poodle', u'toy poodle', u'Bedlington terrier', u'standard poodle', u'Old English sheepdog, bobtail']
-INT8 [u'standard poodle', u'Bedlington terrier', u'miniature poodle', u'komondor', u'toy poodle']
+Precision:  native [u'seashore, coast, seacoast, sea-coast', u'promontory, headland, head, foreland', u'breakwater, groin, groyne, mole, bulwark, seawall, jetty', u'lakeside, lakeshore', u'grey whale, gray whale, devilfish, Eschrichtius gibbosus, Eschrichtius robustus']
+Precision:  FP32 [u'seashore, coast, seacoast, sea-coast', u'promontory, headland, head, foreland', u'breakwater, groin, groyne, mole, bulwark, seawall, jetty', u'lakeside, lakeshore', u'sandbar, sand bar']
+Precision:  FP16 [u'seashore, coast, seacoast, sea-coast', u'promontory, headland, head, foreland', u'lakeside, lakeshore', u'sandbar, sand bar', u'breakwater, groin, groyne, mole, bulwark, seawall, jetty']
 ```
 
 The script will generate or append to a file in the output_dir, `log.txt`,
@@ -88,19 +85,20 @@ which includes the timing information for each of the models:
 
 ```
 ==========================
-network: native_imagenet_frozen_graph.pb,  batchsize 128, steps 100
-  fps   median: 670.6,  mean: 664.1,  uncertainty: 6.5,   jitter: 0.8
-  latency   median: 0.19089,  mean: 0.25054,  99th_p: 0.25119,  99th_uncertainty: 3.04235
+network: native_resnetv2_imagenet_frozen_graph.pb,   batchsize 128, steps 100
+  fps   median: 1041.4,   mean: 1056.6,   uncertainty: 2.8,   jitter: 6.1
+  latency   median: 0.12292,  mean: 0.12123,  99th_p: 0.13151,  99th_uncertainty: 0.00024
 
 ==========================
-network: tftrt_fp32_imagenet_frozen_graph.pb,  batchsize 128, steps 100
-  fps   median: 822.5,  mean: 814.2,  uncertainty: 8.1,   jitter: 0.9
-  latency   median: 0.15563,  mean: 0.24805,  99th_p: 0.24920,  99th_uncertainty: 4.71088
+network: tftrt_fp32_resnetv2_imagenet_frozen_graph.pb,   batchsize 128, steps 100
+  fps   median: 1253.0,   mean: 1250.8,   uncertainty: 3.4,   jitter: 17.3
+  latency   median: 0.10215,  mean: 0.10241,  99th_p: 0.11482,  99th_uncertainty: 0.01109
 
 ==========================
-network: tftrt_fp16_imagenet_frozen_graph.pb,  batchsize 128, steps 100
-  fps   median: 1279.1,   mean: 1265.6,   uncertainty: 12.6,  jitter: 2.4
-  latency   median: 0.10007,  mean: 0.16619,  99th_p: 0.17133,  99th_uncertainty: 3.36558
+network: tftrt_fp16_resnetv2_imagenet_frozen_graph.pb,   batchsize 128, steps 100
+  fps   median: 2280.2,   mean: 2312.8,   uncertainty: 10.3,  jitter: 100.1
+  latency   median: 0.05614,  mean: 0.05546,  99th_p: 0.06103,  99th_uncertainty: 0.00781
+
 ```
 
 The script will also output the GraphDefs used for each of the modes run,
@@ -113,22 +111,31 @@ tftrt_fp16_imagenet_frozen_graph.pb
 tftrt_fp32_imagenet_frozen_graph.pb
 ```
 
-TODO(tfboyd): Numbers/testing for int8?
-
 ## Troubleshooting and Notes
 
-### GPU/Precision Compatibility
+### INT8 Mode is the Bleeding Edge
 
-Not all GPUs support the ops required for all precisions. For example, P100s
-cannot currently run INT8 precision.
-
-Note that currently, int8 mode results in a segfault using the models provided.
+Note that currently, INT8 mode results in a segfault using the models provided.
 We are working on it.
 
 ```
 E tensorflow/contrib/tensorrt/log/trt_logger.cc:38] DefaultLogger Parameter check failed at: Network.cpp::addScale::118, condition: shift.count == 0 || shift.count == weightCount
 Segmentation fault (core dumped)
 ```
+
+### GPU/Precision Compatibility
+
+Not all GPUs support the ops required for all precisions. For example, P100s
+cannot currently run INT8 precision.
+
+### Label Offsets
+
+Some ResNet models represent 1000 categories, and some represent all 1001, with
+the 0th category being "background". The models provided are of the latter type.
+If you are using a different model and find that your predictions seem slightly
+off, try passing in the `--ids_are_one_indexed` arg, which adjusts the label
+alignment for models with only 1000 categories.
+
 
 ## Model Links
 [ResNet-v2-ImageNet Frozen Graph](http://download.tensorflow.org/models/official/resnetv2_imagenet_frozen_graph.pb)
