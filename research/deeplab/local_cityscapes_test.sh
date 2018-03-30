@@ -34,10 +34,8 @@ export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
 CURRENT_DIR=$(pwd)
 WORK_DIR="${CURRENT_DIR}/deeplab"
 
-echo I am here
 # Run model_test first to make sure the PYTHONPATH is correctly set.
 python "${WORK_DIR}"/model_test.py -v
-echo Now I am here
 
 DATASET_DIR="datasets"
 # cd "${WORK_DIR}/${DATASET_DIR}"
