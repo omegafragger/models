@@ -83,7 +83,6 @@ python "${WORK_DIR}"/train.py \
   --train_crop_size=769 \
   --train_batch_size=10 \
   --training_number_of_steps="${NUM_ITERATIONS}" \
-  --fine_tune_batch_norm=true \
   --dataset="cityscapes" \
   --tf_initial_checkpoint="${INIT_FOLDER}/deeplabv3_cityscapes_train/model.ckpt" \
   --train_logdir="${TRAIN_LOGDIR}" \
