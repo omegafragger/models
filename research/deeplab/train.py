@@ -178,9 +178,9 @@ def _build_deeplab(inputs_queue, outputs_to_num_classes, ignore_label):
   """
   samples = inputs_queue.dequeue()
 
-  # add name input and label so we can add to summary
-  samples[common.IMAGE] = tf.identity(samples[common.IMAGE], 'input_image')
-  samples[common.LABEL] = tf.identity(samples[common.LABEL], 'input_label')
+  # add name to input and label nodes so we can add to summary
+  samples[common.IMAGE] = tf.identity(samples[common.IMAGE], name = common.IMAGE)
+  samples[common.LABEL] = tf.identity(samples[common.LABEL], name = common.LABEL)
 
   model_options = common.ModelOptions(
       outputs_to_num_classes=outputs_to_num_classes,
@@ -194,6 +194,12 @@ def _build_deeplab(inputs_queue, outputs_to_num_classes, ignore_label):
       weight_decay=FLAGS.weight_decay,
       is_training=True,
       fine_tune_batch_norm=FLAGS.fine_tune_batch_norm)
+
+  # add name to graph node so we can add to summary
+  outputs_to_scales_to_logits[common.OUTPUT_TYPE][model._MERGED_LOGITS_SCOPE] = tf.identity( 
+    outputs_to_scales_to_logits[common.OUTPUT_TYPE][model._MERGED_LOGITS_SCOPE],
+    name = common.OUTPUT_TYPE
+  )
 
   for output, num_classes in six.iteritems(outputs_to_num_classes):
     train_utils.add_softmax_cross_entropy_loss_for_each_scale(
@@ -273,6 +279,7 @@ def main(unused_argv):
       summaries.add(tf.summary.histogram(model_var.op.name, model_var))
 
     # Add summaries for images, labels, semantic predictions
+<<<<<<< HEAD
     summary_image = graph.get_tensor_by_name(first_clone_scope + '/input_image:0')
     summaries.add(tf.summary.image('samples/input_image', summary_image))
 
@@ -281,6 +288,22 @@ def main(unused_argv):
 
     predictions = tf.cast(tf.expand_dims(tf.argmax(graph.get_tensor_by_name(first_clone_scope + '/semantic_merged_logits:0'), 3), -1), tf.uint8)
     summaries.add(tf.summary.image('samples/semantic_predictions', predictions))
+=======
+    if FLAGS.save_summaries_images:
+        summary_image = graph.get_tensor_by_name(
+            ('%s/%s:0' % (first_clone_scope, common.IMAGE)).strip('/'))
+        summaries.add(tf.summary.image('samples/%s' % common.IMAGE, summary_image))
+
+        summary_label = tf.cast(graph.get_tensor_by_name(
+            ('%s/%s:0' % (first_clone_scope, common.LABEL)).strip('/')),
+            tf.uint8)
+        summaries.add(tf.summary.image('samples/%s' % common.LABEL, summary_label))
+
+        predictions = tf.cast(tf.expand_dims(tf.argmax(graph.get_tensor_by_name( 
+            ('%s/%s:0' % (first_clone_scope, common.OUTPUT_TYPE)).strip('/')),
+            3), -1), tf.uint8)
+        summaries.add(tf.summary.image('samples/%s' % common.OUTPUT_TYPE, predictions))
+>>>>>>> simplify names; bugfix for single-GPU training
 
     # Add summaries for losses.
     for loss in tf.get_collection(tf.GraphKeys.LOSSES, first_clone_scope):
