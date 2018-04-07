@@ -72,6 +72,7 @@ CITYSCAPES_DATASET="${WORK_DIR}/${DATASET_DIR}/${CITYSCAPES_FOLDER}/tfrecord"
 NUM_ITERATIONS=90000
 python "${WORK_DIR}"/train.py \
   --logtostderr \
+  --num_clones=8 \
   --train_split="train" \
   --model_variant="xception_65" \
   --atrous_rates=6 \
@@ -81,13 +82,15 @@ python "${WORK_DIR}"/train.py \
   --decoder_output_stride=4 \
   --train_crop_size=769 \
   --train_crop_size=769 \
-  --train_batch_size=10 \
+  --train_batch_size=16 \
+  --fine_tune_batch_norm=True \
   --training_number_of_steps="${NUM_ITERATIONS}" \
   --dataset="cityscapes" \
   --tf_initial_checkpoint="${INIT_FOLDER}/deeplabv3_cityscapes_train/model.ckpt" \
   --train_logdir="${TRAIN_LOGDIR}" \
   --dataset_dir="${CITYSCAPES_DATASET}"
 
+: '
 # Run evaluation. This performs eval over the full val split (1449 images) and
 # will take a while.
 # Using the provided checkpoint, one should expect mIOU=82.20%.
@@ -142,7 +145,7 @@ python "${WORK_DIR}"/export_model.py \
   --num_classes=21 \
   --crop_size=513 \
   --crop_size=513 \
-  --inference_scales=1.0
+  --inference_scales=1.0'
 
 # Run inference with the exported checkpoint.
 # Please refer to the provided deeplab_demo.ipynb for an example."
