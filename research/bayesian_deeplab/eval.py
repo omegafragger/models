@@ -20,10 +20,10 @@ See model.py for more details and usage.
 import six
 import math
 import tensorflow as tf
-from deeplab import common
-from deeplab import model
-from deeplab.datasets import segmentation_dataset
-from deeplab.utils import input_generator
+from bayesian_deeplab import common
+from bayesian_deeplab import model
+from bayesian_deeplab.datasets import segmentation_dataset
+from bayesian_deeplab.utils import input_generator
 
 slim = tf.contrib.slim
 

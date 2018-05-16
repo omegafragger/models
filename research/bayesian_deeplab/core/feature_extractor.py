@@ -18,7 +18,7 @@ import functools
 import tensorflow as tf
 import bayesian_xception_models
 
-from deeplab.core import xception
+from bayesian_deeplab.core import xception
 from nets.mobilenet import mobilenet as mobilenet_lib
 from nets.mobilenet import mobilenet_v2
 
@@ -69,7 +69,7 @@ def _mobilenet_v2(net,
 # A map from network name to network function.
 networks_map = {
     'mobilenet_v2': _mobilenet_v2,
-
+    'xception_65': xception.xception_65,
     'bayesian_xception_full_entry_flow': bayesian_xception_models.bayesian_xception_full_entry_flow,
     'bayesian_xception_full_exit_flow': bayesian_xception_models.bayesian_xception_full_exit_flow,
     'bayesian_xception_full_middle_flow': bayesian_xception_models.bayesian_xception_full_middle_flow,
@@ -82,17 +82,17 @@ networks_map = {
     'bayesian_xception_inter_entry_exit_flow': bayesian_xception_models.bayesian_xception_inter_entry_exit_flow,
     'bayesian_xception_inter_entry_middle_exit_flow': bayesian_xception_models.bayesian_xception_inter_entry_middle_exit_flow,
 
-    'bayesian_xception_red_entry_flow': bayesian_xception_models.bayesian_xception_red_entry_flow,
-    'bayesian_xception_red_exit_flow': bayesian_xception_models.bayesian_xception_red_exit_flow,
-    'bayesian_xception_red_middle_flow': bayesian_xception_models.bayesian_xception_red_middle_flow,
-    'bayesian_xception_red_entry_exit_flow': bayesian_xception_models.bayesian_xception_red_entry_exit_flow,
-    'bayesian_xception_red_entry_middle_exit_flow': bayesian_xception_models.bayesian_xception_red_entry_middle_exit_flow,
+    # 'bayesian_xception_red_entry_flow': bayesian_xception_models.bayesian_xception_red_entry_flow,
+    # 'bayesian_xception_red_exit_flow': bayesian_xception_models.bayesian_xception_red_exit_flow,
+    # 'bayesian_xception_red_middle_flow': bayesian_xception_models.bayesian_xception_red_middle_flow,
+    # 'bayesian_xception_red_entry_exit_flow': bayesian_xception_models.bayesian_xception_red_entry_exit_flow,
+    # 'bayesian_xception_red_entry_middle_exit_flow': bayesian_xception_models.bayesian_xception_red_entry_middle_exit_flow,
 }
 
 # A map from network name to network arg scope.
 arg_scopes_map = {
     'mobilenet_v2': mobilenet_v2.training_scope,
-
+    'xception_65': xception.xception_arg_scope,
     'bayesian_xception_full_entry_flow': xception.xception_arg_scope,
     'bayesian_xception_full_exit_flow': xception.xception_arg_scope,
     'bayesian_xception_full_middle_flow': xception.xception_arg_scope,
@@ -105,11 +105,11 @@ arg_scopes_map = {
     'bayesian_xception_inter_entry_exit_flow': xception.xception_arg_scope,
     'bayesian_xception_inter_entry_middle_exit_flow': xception.xception_arg_scope,
 
-    'bayesian_xception_red_entry_flow': xception.xception_arg_scope,
-    'bayesian_xception_red_exit_flow': xception.xception_arg_scope,
-    'bayesian_xception_red_middle_flow': xception.xception_arg_scope,
-    'bayesian_xception_red_entry_exit_flow': xception.xception_arg_scope,
-    'bayesian_xception_red_entry_middle_exit_flow': xception.xception_arg_scope,
+    # 'bayesian_xception_red_entry_flow': xception.xception_arg_scope,
+    # 'bayesian_xception_red_exit_flow': xception.xception_arg_scope,
+    # 'bayesian_xception_red_middle_flow': xception.xception_arg_scope,
+    # 'bayesian_xception_red_entry_exit_flow': xception.xception_arg_scope,
+    # 'bayesian_xception_red_entry_middle_exit_flow': xception.xception_arg_scope,
 }
 
 # Names for end point features.
@@ -121,7 +121,12 @@ networks_to_feature_maps = {
         # The provided checkpoint does not include decoder module.
         DECODER_END_POINTS: None,
     },
-
+    'xception_65': {
+        DECODER_END_POINTS: [
+            'entry_flow/block2/unit_1/xception_module/'
+            'separable_conv2_pointwise',
+        ],
+    },
     'bayesian_xception_full_entry_flow': {
         DECODER_END_POINTS: [
             'entry_flow/block2/unit_1/xception_module/'
@@ -184,36 +189,36 @@ networks_to_feature_maps = {
         ],
     },
 
-    'bayesian_xception_red_entry_flow': {
-        DECODER_END_POINTS: [
-            'entry_flow/block2/unit_1/xception_module/'
-            'separable_conv2_pointwise',
-        ],
-    },
-    'bayesian_xception_red_exit_flow': {
-        DECODER_END_POINTS: [
-            'entry_flow/block2/unit_1/xception_module/'
-            'separable_conv2_pointwise',
-        ],
-    },
-    'bayesian_xception_red_middle_flow': {
-        DECODER_END_POINTS: [
-            'entry_flow/block2/unit_1/xception_module/'
-            'separable_conv2_pointwise',
-        ],
-    },
-    'bayesian_xception_red_entry_exit_flow': {
-        DECODER_END_POINTS: [
-            'entry_flow/block2/unit_1/xception_module/'
-            'separable_conv2_pointwise',
-        ],
-    },
-    'bayesian_xception_red_entry_middle_exit_flow': {
-        DECODER_END_POINTS: [
-            'entry_flow/block2/unit_1/xception_module/'
-            'separable_conv2_pointwise',
-        ],
-    }
+    # 'bayesian_xception_red_entry_flow': {
+    #     DECODER_END_POINTS: [
+    #         'entry_flow/block2/unit_1/xception_module/'
+    #         'separable_conv2_pointwise',
+    #     ],
+    # },
+    # 'bayesian_xception_red_exit_flow': {
+    #     DECODER_END_POINTS: [
+    #         'entry_flow/block2/unit_1/xception_module/'
+    #         'separable_conv2_pointwise',
+    #     ],
+    # },
+    # 'bayesian_xception_red_middle_flow': {
+    #     DECODER_END_POINTS: [
+    #         'entry_flow/block2/unit_1/xception_module/'
+    #         'separable_conv2_pointwise',
+    #     ],
+    # },
+    # 'bayesian_xception_red_entry_exit_flow': {
+    #     DECODER_END_POINTS: [
+    #         'entry_flow/block2/unit_1/xception_module/'
+    #         'separable_conv2_pointwise',
+    #     ],
+    # },
+    # 'bayesian_xception_red_entry_middle_exit_flow': {
+    #     DECODER_END_POINTS: [
+    #         'entry_flow/block2/unit_1/xception_module/'
+    #         'separable_conv2_pointwise',
+    #     ],
+    # }
 }
 
 # A map from feature extractor name to the network name scope used in the
@@ -233,11 +238,11 @@ name_scope = {
     'bayesian_xception_inter_entry_exit_flow': 'bayesian_xception_inter_entry_exit_flow',
     'bayesian_xception_inter_entry_middle_exit_flow': 'bayesian_xception_inter_entry_middle_exit_flow',
 
-    'bayesian_xception_red_entry_flow': 'bayesian_xception_red_entry_flow',
-    'bayesian_xception_red_exit_flow': 'bayesian_xception_red_exit_flow',
-    'bayesian_xception_red_middle_flow': 'bayesian_xception_red_middle_flow',
-    'bayesian_xception_red_entry_exit_flow': 'bayesian_xception_red_entry_exit_flow',
-    'bayesian_xception_red_entry_middle_exit_flow': 'bayesian_xception_red_entry_middle_exit_flow',
+    # 'bayesian_xception_red_entry_flow': 'bayesian_xception_red_entry_flow',
+    # 'bayesian_xception_red_exit_flow': 'bayesian_xception_red_exit_flow',
+    # 'bayesian_xception_red_middle_flow': 'bayesian_xception_red_middle_flow',
+    # 'bayesian_xception_red_entry_exit_flow': 'bayesian_xception_red_entry_exit_flow',
+    # 'bayesian_xception_red_entry_middle_exit_flow': 'bayesian_xception_red_entry_middle_exit_flow',
 }
 
 # Mean pixel value.
@@ -270,11 +275,11 @@ _PREPROCESS_FN = {
     'bayesian_xception_inter_entry_exit_flow': _preprocess_zero_mean_unit_range,
     'bayesian_xception_inter_entry_middle_exit_flow': _preprocess_zero_mean_unit_range,
 
-    'bayesian_xception_red_entry_flow': _preprocess_zero_mean_unit_range,
-    'bayesian_xception_red_exit_flow': _preprocess_zero_mean_unit_range,
-    'bayesian_xception_red_middle_flow': _preprocess_zero_mean_unit_range,
-    'bayesian_xception_red_entry_exit_flow': _preprocess_zero_mean_unit_range,
-    'bayesian_xception_red_entry_middle_exit_flow': _preprocess_zero_mean_unit_range,
+    # 'bayesian_xception_red_entry_flow': _preprocess_zero_mean_unit_range,
+    # 'bayesian_xception_red_exit_flow': _preprocess_zero_mean_unit_range,
+    # 'bayesian_xception_red_middle_flow': _preprocess_zero_mean_unit_range,
+    # 'bayesian_xception_red_entry_exit_flow': _preprocess_zero_mean_unit_range,
+    # 'bayesian_xception_red_entry_middle_exit_flow': _preprocess_zero_mean_unit_range,
 }
 
 

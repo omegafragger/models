@@ -471,6 +471,7 @@ def xception_block(scope,
                    regularize_depthwise,
                    num_units,
                    stride,
+                   dropout=False,
                    unit_rate_list=None):
   """Helper function for creating a Xception block.
 
@@ -486,6 +487,7 @@ def xception_block(scope,
     num_units: The number of units in the block.
     stride: The stride of the block, implemented as a stride in the last unit.
       All other units have stride=1.
+    dropout: Whether to apply dropout at the end of the block or not.
     unit_rate_list: A list of three integers, determining the unit rate in the
       corresponding xception block.
 
@@ -499,6 +501,7 @@ def xception_block(scope,
       'skip_connection_type': skip_connection_type,
       'activation_fn_in_separable_conv': activation_fn_in_separable_conv,
       'regularize_depthwise': regularize_depthwise,
+      'dropout': dropout,
       'stride': stride,
       'unit_rate_list': unit_rate_list,
   }] * num_units)

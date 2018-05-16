@@ -18,9 +18,9 @@ import os
 import tensorflow as tf
 
 from tensorflow.python.tools import freeze_graph
-from deeplab import common
-from deeplab import input_preprocess
-from deeplab import model
+from bayesian_deeplab import common
+from bayesian_deeplab import input_preprocess
+from bayesian_deeplab import model
 
 slim = tf.contrib.slim
 flags = tf.app.flags

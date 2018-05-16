@@ -19,11 +19,11 @@ See model.py for more details and usage.
 
 import six
 import tensorflow as tf
-from deeplab import common
-from deeplab import model
-from deeplab.datasets import segmentation_dataset
-from deeplab.utils import input_generator
-from deeplab.utils import train_utils
+from bayesian_deeplab import common
+from bayesian_deeplab import model
+from bayesian_deeplab.datasets import segmentation_dataset
+from bayesian_deeplab.utils import input_generator
+from bayesian_deeplab.utils import train_utils
 from deployment import model_deploy
 
 slim = tf.contrib.slim
@@ -119,7 +119,7 @@ flags.DEFINE_string('tf_initial_checkpoint', None,
                     'The initial checkpoint in tensorflow format.')
 
 # Set to False if one does not want to re-use the trained classifier weights.
-flags.DEFINE_boolean('initialize_last_layer', True,
+flags.DEFINE_boolean('initialize_last_layer', False,
                      'Initialize the last layer.')
 
 flags.DEFINE_boolean('last_layers_contain_logits_only', False,
@@ -375,6 +375,6 @@ def main(unused_argv):
 
 if __name__ == '__main__':
   flags.mark_flag_as_required('train_logdir')
-  flags.mark_flag_as_required('tf_initial_checkpoint')
+ # flags.mark_flag_as_required('tf_initial_checkpoint')
   flags.mark_flag_as_required('dataset_dir')
   tf.app.run()

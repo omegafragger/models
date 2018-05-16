@@ -43,7 +43,23 @@ flags.DEFINE_integer('logits_kernel_size', 1,
 # When using 'xception_65', we set atrous_rates = [6, 12, 18] (output stride 16)
 # and decoder_output_stride = 4.
 flags.DEFINE_enum('model_variant', 'mobilenet_v2',
-                  ['xception_65', 'mobilenet_v2'], 'DeepLab model variant.')
+                  ['bayesian_xception_full_entry_flow',
+                   'bayesian_xception_full_exit_flow',
+                   'bayesian_xception_full_middle_flow',
+                   'bayesian_xception_full_entry_exit_flow',
+                   'bayesian_xception_full_entry_middle_exit_flow',
+                   'bayesian_xception_inter_entry_flow',
+                   'bayesian_xception_inter_exit_flow',
+                   'bayesian_xception_inter_middle_flow',
+                   'bayesian_xception_inter_entry_exit_flow',
+                   'bayesian_xception_inter_entry_middle_exit_flow',
+                   'bayesian_xception_red_entry_flow',
+                   'bayesian_xception_red_exit_flow',
+                   'bayesian_xception_red_middle_flow',
+                   'bayesian_xception_red_entry_exit_flow',
+                   'bayesian_xception_red_entry_middle_exit_flow',
+                   'xception_65',
+                   'mobilenet_v2'], 'DeepLab model variant.')
 
 flags.DEFINE_multi_float('image_pyramid', None,
                          'Input scales for multi-scale feature extraction.')

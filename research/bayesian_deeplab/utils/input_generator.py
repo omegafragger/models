@@ -15,8 +15,8 @@
 """Wrapper for providing semantic segmentation data."""
 
 import tensorflow as tf
-from deeplab import common
-from deeplab import input_preprocess
+from bayesian_deeplab import common
+from bayesian_deeplab import input_preprocess
 
 slim = tf.contrib.slim
 
