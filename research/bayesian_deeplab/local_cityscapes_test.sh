@@ -35,7 +35,7 @@ CURRENT_DIR=$(pwd)
 WORK_DIR="${CURRENT_DIR}/deeplab"
 
 # Run model_test first to make sure the PYTHONPATH is correctly set.
-python "${WORK_DIR}"/model_test.py -v
+# python "${WORK_DIR}"/model_test.py -v
 
 DATASET_DIR="datasets"
 # cd "${WORK_DIR}/${DATASET_DIR}"
