@@ -25,6 +25,7 @@ from bayesian_deeplab.datasets import segmentation_dataset
 from bayesian_deeplab.utils import input_generator
 from bayesian_deeplab.utils import train_utils
 from deployment import model_deploy
+import collections
 
 slim = tf.contrib.slim
 
@@ -175,6 +176,22 @@ Clone = collections.namedtuple('Clone',
                                ])
 
 
+def clone_scope(clone_index):
+    """Name scope to create the clone.
+    Args:
+      clone_index: Int, representing the clone_index.
+    Returns:
+      A name_scope suitable for `tf.name_scope()`.
+    Raises:
+      ValueError: if `clone_index` is greater or equal to the number of clones".
+    """
+    #if clone_index >= self._num_clones:
+    #    raise ValueError('clone_index must be less than num_clones')
+    scope = ''
+    if FLAGS.num_clones > 1:
+        scope = 'clone_%d' % clone_index
+    return scope
+
 def clone_device(clone_index):
     """Device used to create the clone and all the ops inside the clone.
     Args:
@@ -184,8 +201,8 @@ def clone_device(clone_index):
     Raises:
       ValueError: if `clone_index` is greater or equal to the number of clones".
     """
-    if clone_index >= FLAGS.num_clones:
-        raise ValueError('clone_index must be less than num_clones')
+    #if clone_index >= FLAGS.num_clones:
+    #    raise ValueError('clone_index must be less than num_clones')
     device = ''
     worker_device = '/job:' + 'worker' if FLAGS.num_ps_tasks > 0 else ''
     if FLAGS.num_ps_tasks > 0:
@@ -233,13 +250,13 @@ def create_clones(config, clone_list, model_fn, args=None, kwargs=None):
                       device=config.variables_device()):
     # Create clones.
     for i in clone_list:
-      with tf.name_scope(config.clone_scope(i)) as clone_scope:
-        clone_device = clone_device(i)
-        with tf.device(clone_device):
+      with tf.name_scope(clone_scope(i)) as clone_sc:
+        clone_dev = clone_device(i)
+        with tf.device(clone_dev):
           with tf.variable_scope(tf.get_variable_scope(),
                                  reuse=True if i > 0 else None):
             outputs = model_fn(*args, **kwargs)
-          clones.append(Clone(outputs, clone_scope, clone_device))
+          clones.append(Clone(outputs, clone_sc, clone_dev))
   return clones
 
 
