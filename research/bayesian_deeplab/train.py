@@ -25,7 +25,6 @@ from bayesian_deeplab.datasets import segmentation_dataset
 from bayesian_deeplab.utils import input_generator
 from bayesian_deeplab.utils import train_utils
 from deployment import model_deploy
-import collections
 
 slim = tf.contrib.slim
 
@@ -38,10 +37,6 @@ FLAGS = flags.FLAGS
 # Settings for multi-GPUs/multi-replicas training.
 
 flags.DEFINE_integer('num_clones', 1, 'Number of clones to deploy.')
-
-# Clone settings for multi-GPU
-flags.DEFINE_multi_integer('clones', None,
-                           'Indices of clone GPUs which are to be used.')
 
 flags.DEFINE_boolean('clone_on_cpu', False, 'Use CPUs to deploy clones.')
 
@@ -168,97 +163,6 @@ flags.DEFINE_string('train_split', 'train',
 
 flags.DEFINE_string('dataset_dir', None, 'Where the dataset reside.')
 
-# Namedtuple used to represent a clone during deployment.
-Clone = collections.namedtuple('Clone',
-                               ['outputs',  # Whatever model_fn() returned.
-                                'scope',  # The scope used to create it.
-                                'device',  # The device used to create.
-                               ])
-
-
-def clone_scope(clone_index):
-    """Name scope to create the clone.
-    Args:
-      clone_index: Int, representing the clone_index.
-    Returns:
-      A name_scope suitable for `tf.name_scope()`.
-    Raises:
-      ValueError: if `clone_index` is greater or equal to the number of clones".
-    """
-    #if clone_index >= self._num_clones:
-    #    raise ValueError('clone_index must be less than num_clones')
-    scope = ''
-    if FLAGS.num_clones > 1:
-        scope = 'clone_%d' % clone_index
-    return scope
-
-def clone_device(clone_index):
-    """Device used to create the clone and all the ops inside the clone.
-    Args:
-      clone_index: Int, representing the clone_index.
-    Returns:
-      A value suitable for `tf.device()`.
-    Raises:
-      ValueError: if `clone_index` is greater or equal to the number of clones".
-    """
-    #if clone_index >= FLAGS.num_clones:
-    #    raise ValueError('clone_index must be less than num_clones')
-    device = ''
-    worker_device = '/job:' + 'worker' if FLAGS.num_ps_tasks > 0 else ''
-    if FLAGS.num_ps_tasks > 0:
-        device += worker_device
-    if FLAGS.clone_on_cpu:
-        device += '/device:CPU:0'
-    else:
-        device += '/device:GPU:%d' % clone_index
-    return device
-
-def create_clones(config, clone_list, model_fn, args=None, kwargs=None):
-  """Creates multiple clones according to config using a `model_fn`.
-  The returned values of `model_fn(*args, **kwargs)` are collected along with
-  the scope and device used to created it in a namedtuple
-  `Clone(outputs, scope, device)`
-  Note: it is assumed that any loss created by `model_fn` is collected at
-  the tf.GraphKeys.LOSSES collection.
-  To recover the losses, summaries or update_ops created by the clone use:
-  ```python
-    losses = tf.get_collection(tf.GraphKeys.LOSSES, clone.scope)
-    summaries = tf.get_collection(tf.GraphKeys.SUMMARIES, clone.scope)
-    update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS, clone.scope)
-  ```
-  The deployment options are specified by the config object and support
-  deploying one or several clones on different GPUs and one or several replicas
-  of such clones.
-  The argument `model_fn` is called `config.num_clones` times to create the
-  model clones as `model_fn(*args, **kwargs)`.
-  If `config` specifies deployment on multiple replicas then the default
-  tensorflow device is set appropriatly for each call to `model_fn` and for the
-  slim variable creation functions: model and global variables will be created
-  on the `ps` device, the clone operations will be on the `worker` device.
-  Args:
-    config: A DeploymentConfig object.
-    model_fn: A callable. Called as `model_fn(*args, **kwargs)`
-    args: Optional list of arguments to pass to `model_fn`.
-    kwargs: Optional list of keyword arguments to pass to `model_fn`.
-  Returns:
-    A list of namedtuples `Clone`.
-  """
-  clones = []
-  args = args or []
-  kwargs = kwargs or {}
-  with slim.arg_scope([slim.model_variable, slim.variable],
-                      device=config.variables_device()):
-    # Create clones.
-    for i in clone_list:
-      with tf.name_scope(clone_scope(i)) as clone_sc:
-        clone_dev = clone_device(i)
-        with tf.device(clone_dev):
-          with tf.variable_scope(tf.get_variable_scope(),
-                                 reuse=True if i > 0 else None):
-            outputs = model_fn(*args, **kwargs)
-          clones.append(Clone(outputs, clone_sc, clone_dev))
-  return clones
-
 
 def _build_deeplab(inputs_queue, outputs_to_num_classes, ignore_label):
   """Builds a clone of DeepLab.
@@ -366,7 +270,7 @@ def main(unused_argv):
       model_args = (inputs_queue, {
           common.OUTPUT_TYPE: dataset.num_classes
       }, dataset.ignore_label)
-      clones = create_clones(config, FLAGS.clones, model_fn, args=model_args)
+      clones = model_deploy.create_clones(config, model_fn, args=model_args)
 
       # Gather update_ops from the first clone. These contain, for example,
       # the updates for the batch_norm variables created by model_fn.
