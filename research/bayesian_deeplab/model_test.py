@@ -42,7 +42,22 @@ class DeeplabModelTest(tf.test.TestCase):
     image_pyramids = [[1], [0.5, 1]]
 
     # Test two model variants.
-    model_variants = ['xception_65',
+    model_variants = ['bayesian_xception_full_entry_flow',
+                      'bayesian_xception_full_exit_flow',
+                      'bayesian_xception_full_middle_flow',
+                      'bayesian_xception_full_entry_exit_flow',
+                      'bayesian_xception_full_entry_middle_exit_flow',
+                      'bayesian_xception_inter_entry_flow',
+                      'bayesian_xception_inter_exit_flow',
+                      'bayesian_xception_inter_middle_flow',
+                      'bayesian_xception_inter_entry_exit_flow',
+                      'bayesian_xception_inter_entry_middle_exit_flow',
+                      'bayesian_xception_red_entry_flow',
+                      'bayesian_xception_red_exit_flow',
+                      'bayesian_xception_red_middle_flow',
+                      'bayesian_xception_red_entry_exit_flow',
+                      'bayesian_xception_red_entry_middle_exit_flow',
+                      'xception_65',
                       'mobilenet_v2']
 
     # Test with two output_types.
