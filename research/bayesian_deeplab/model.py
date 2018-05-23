@@ -64,6 +64,11 @@ _CONCAT_PROJECTION_SCOPE = 'concat_projection'
 _DECODER_SCOPE = 'decoder'
 
 
+_VARIATION_RATIO = 'variation_ratio'
+_PREDICTIVE_ENTROPY = 'predictive_entropy'
+_MUTUAL_INFORMATION = 'mutual_information'
+
+
 def get_extra_layer_scopes(last_layers_contain_logits_only=False):
   """Gets the scopes for extra layers.
 
@@ -173,6 +178,50 @@ def predict_labels(images, model_options, image_pyramid=None):
       image_pyramid=image_pyramid,
       is_training=False,
       fine_tune_batch_norm=False)
+
+  predictions = {}
+  for output in sorted(outputs_to_scales_to_logits):
+    scales_to_logits = outputs_to_scales_to_logits[output]
+    logits = tf.image.resize_bilinear(
+        scales_to_logits[_MERGED_LOGITS_SCOPE],
+        tf.shape(images)[1:3],
+        align_corners=True)
+    predictions[output] = tf.argmax(logits, 3)
+
+  return predictions
+
+
+def predict_labels_uncertainty(images,
+                               model_options,
+                               uncertainty_metric,
+                               image_pyramid=None,
+                               num_MC_trials = 10):
+  """Predicts segmentation labels and uncertainty values depending
+  on the uncertainty metric given.
+
+  Args:
+    images: A tensor of size [batch, height, width, channels].
+    model_options: A ModelOptions instance to configure models.
+    uncertainty_metric: Can be 'variation_ratio' or 'predictive_entropy' or 'mutual_information'
+    image_pyramid: Input image scales for multi-scale feature extraction.
+    num_MC_trials: Number of Monte Carlo samples used for generating mean and uncertainty values
+
+  Returns:
+    A dictionary with keys specifying the output_type (e.g., semantic
+      prediction or uncertainty) and values storing Tensors representing predictions
+      (argmax over channels). Each prediction has size [batch, height, width].
+  """
+
+  # Executing the Monte Carlo trials
+  mc_logit_outputs = []
+  for i in range(0, num_MC_trials):
+    outputs_to_scales_to_logits = multi_scale_logits(
+        images,
+        model_options=model_options,
+        image_pyramid=image_pyramid,
+        is_training=False,
+        fine_tune_batch_norm=False)
+    mc_logit_outputs.append(outputs_to_scales_to_logits)
 
   predictions = {}
   for output in sorted(outputs_to_scales_to_logits):
