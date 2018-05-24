@@ -22,11 +22,11 @@ import os.path
 import time
 import numpy as np
 import tensorflow as tf
-from deeplab import common
-from deeplab import model
-from deeplab.datasets import segmentation_dataset
-from deeplab.utils import input_generator
-from deeplab.utils import save_annotation
+from bayesian_deeplab import common
+from bayesian_deeplab import model
+from bayesian_deeplab.datasets import segmentation_dataset
+from bayesian_deeplab.utils import input_generator
+from bayesian_deeplab.utils import save_annotation
 
 slim = tf.contrib.slim
 

@@ -64,11 +64,6 @@ _CONCAT_PROJECTION_SCOPE = 'concat_projection'
 _DECODER_SCOPE = 'decoder'
 
 
-_VARIATION_RATIO = 'variation_ratio'
-_PREDICTIVE_ENTROPY = 'predictive_entropy'
-_MUTUAL_INFORMATION = 'mutual_information'
-
-
 def get_extra_layer_scopes(last_layers_contain_logits_only=False):
   """Gets the scopes for extra layers.
 
@@ -221,9 +216,23 @@ def predict_labels_uncertainty(images,
         image_pyramid=image_pyramid,
         is_training=False,
         fine_tune_batch_norm=False)
+    for output in sorted(outputs_to_scales_to_logits):
+      scales_to_logits = outputs_to_scales_to_logits[output]
+      # Number of channels of the logits = number of classes
+      logits = tf.image.resize_bilinear(
+          scales_to_logits[_MERGED_LOGITS_SCOPE],
+          tf.shape(images)[1:3],
+          align_corners=True)
+      softmaxed_logits = tf.nn.softmax(logits)
+      mc_logit_outputs.append(softmaxed_logits)
+
+
+
+
     mc_logit_outputs.append(outputs_to_scales_to_logits)
 
   predictions = {}
+  for
   for output in sorted(outputs_to_scales_to_logits):
     scales_to_logits = outputs_to_scales_to_logits[output]
     logits = tf.image.resize_bilinear(
