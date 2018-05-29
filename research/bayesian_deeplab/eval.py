@@ -24,11 +24,11 @@ from bayesian_deeplab import common
 from bayesian_deeplab import model
 from bayesian_deeplab.datasets import segmentation_dataset
 from bayesian_deeplab.utils import input_generator
+from bayesian_deeplab.core import uncertainty_metrics
 
 slim = tf.contrib.slim
 
 flags = tf.app.flags
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('master', '', 'BNS name of the tensorflow server')
@@ -81,6 +81,9 @@ flags.DEFINE_integer('max_number_of_evaluations', 0,
                      'Maximum number of eval iterations. Will loop '
                      'indefinitely upon nonpositive values.')
 
+flags.DEFINE_integer('number_monte_carlo_trials', 10,
+                     'Number of Monte Carlo trials to be carried out for approximate inference')
+
 
 def main(unused_argv):
   tf.logging.set_verbosity(tf.logging.INFO)
@@ -109,19 +112,18 @@ def main(unused_argv):
         atrous_rates=FLAGS.atrous_rates,
         output_stride=FLAGS.output_stride)
 
-    if tuple(FLAGS.eval_scales) == (1.0,):
-      tf.logging.info('Performing single-scale test.')
-      predictions = model.predict_labels(samples[common.IMAGE], model_options,
-                                         image_pyramid=FLAGS.image_pyramid)
-    else:
-      tf.logging.info('Performing multi-scale test.')
-      predictions = model.predict_labels_multi_scale(
-          samples[common.IMAGE],
-          model_options=model_options,
-          eval_scales=FLAGS.eval_scales,
-          add_flipped_images=FLAGS.add_flipped_images)
-    predictions = predictions[common.OUTPUT_TYPE]
-    predictions = tf.reshape(predictions, shape=[-1])
+    tf.logging.info('Performing evaluation with predictions and uncertainties.')
+    predictions = model.predict_labels_uncertainty(samples[common.IMAGE],
+                                                   model_options,
+                                                   image_pyramid=FLAGS.image_pyramid,
+                                                   num_MC_trials=FLAGS.number_monte_carlo_trials)
+
+    mean_prediction = predictions[common.OUTPUT_TYPE]
+    variation_ratio = predictions[uncertainty_metrics.VARIATION_RATIO]
+    predictive_entropy = predictions[uncertainty_metrics.PREDICTIVE_ENTROPY]
+    mutual_information = predictions[uncertainty_metrics.MUTUAL_INFORMATION]
+
+    mean_prediction = tf.reshape(mean_prediction, shape=[-1])
     labels = tf.reshape(samples[common.LABEL], shape=[-1])
     weights = tf.to_float(tf.not_equal(labels, dataset.ignore_label))
 

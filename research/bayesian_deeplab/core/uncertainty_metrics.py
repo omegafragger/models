@@ -10,9 +10,9 @@ r"""The file contains utility methods to compute the mean prediction
 
 import tensorflow as tf
 
-_VARIATION_RATIO = 'variation_ratio'
-_PREDICTIVE_ENTROPY = 'predictive_entropy'
-_MUTUAL_INFORMATION = 'mutual_information'
+VARIATION_RATIO = 'variation_ratio'
+PREDICTIVE_ENTROPY = 'predictive_entropy'
+MUTUAL_INFORMATION = 'mutual_information'
 
 
 def _get_multidimensional_list(batch, height, width):
@@ -71,7 +71,7 @@ def _compute_variation_ratio(input):
         y_val, y_indx, y_count = tf.unique_with_counts(uni_dim_tensor)
 
         # Implementing the variation ratio formula below (1 - fx/T)
-        res_arr[i][x][y][0] = 1.0 - (tf.reduce_max(y_count) / num_mc_trials)
+        res_arr[i][x][y][0] = 1.0 - (tf.cast(tf.reduce_max(y_count), dtype=tf.float32) / num_mc_trials)
   return tf.convert_to_tensor(res_arr)
 
 

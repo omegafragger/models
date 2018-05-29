@@ -98,6 +98,7 @@ FLAGS = flags.FLAGS
 
 # Perform semantic segmentation predictions.
 OUTPUT_TYPE = 'semantic'
+VARIATION_RATIO
 
 # Semantic segmentation item names.
 LABELS_CLASS = 'labels_class'

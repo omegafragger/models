@@ -53,6 +53,7 @@ Alan L. Yuille (* equal contribution)
 """
 import tensorflow as tf
 from bayesian_deeplab.core import feature_extractor
+from bayesian_deeplab.core import uncertainty_metrics
 
 slim = tf.contrib.slim
 
@@ -188,7 +189,6 @@ def predict_labels(images, model_options, image_pyramid=None):
 
 def predict_labels_uncertainty(images,
                                model_options,
-                               uncertainty_metric,
                                image_pyramid=None,
                                num_MC_trials = 10):
   """Predicts segmentation labels and uncertainty values depending
@@ -197,7 +197,6 @@ def predict_labels_uncertainty(images,
   Args:
     images: A tensor of size [batch, height, width, channels].
     model_options: A ModelOptions instance to configure models.
-    uncertainty_metric: Can be 'variation_ratio' or 'predictive_entropy' or 'mutual_information'
     image_pyramid: Input image scales for multi-scale feature extraction.
     num_MC_trials: Number of Monte Carlo samples used for generating mean and uncertainty values
 
@@ -226,22 +225,24 @@ def predict_labels_uncertainty(images,
       softmaxed_logits = tf.nn.softmax(logits)
       mc_logit_outputs.append(softmaxed_logits)
 
+  predictions_uncertainties = {}
 
+  # Adding mean prediction over Monte Carlo trials
+  mean_prediction = uncertainty_metrics.mean_prediction(mc_logit_outputs)
+  mean_prediction = tf.argmax(mean_prediction, 3)
+  for output in sorted(model_options.outputs_to_num_classes):
+      predictions_uncertainties[output] = mean_prediction
 
+  # Adding uncertainty values generated from Monte Carlo trials
+  variation_ratio = uncertainty_metrics.variation_ratio(mc_logit_outputs)
+  predictive_entropy = uncertainty_metrics.predictive_entropy(mc_logit_outputs)
+  mutual_information = uncertainty_metrics.mutual_information(mc_logit_outputs)
 
-    mc_logit_outputs.append(outputs_to_scales_to_logits)
+  predictions_uncertainties[uncertainty_metrics.VARIATION_RATIO] = tf.squeeze(variation_ratio)
+  predictions_uncertainties[uncertainty_metrics.PREDICTIVE_ENTROPY] = tf.squeeze(predictive_entropy)
+  predictions_uncertainties[uncertainty_metrics.MUTUAL_INFORMATION] = tf.squeeze(mutual_information)
 
-  predictions = {}
-  for
-  for output in sorted(outputs_to_scales_to_logits):
-    scales_to_logits = outputs_to_scales_to_logits[output]
-    logits = tf.image.resize_bilinear(
-        scales_to_logits[_MERGED_LOGITS_SCOPE],
-        tf.shape(images)[1:3],
-        align_corners=True)
-    predictions[output] = tf.argmax(logits, 3)
-
-  return predictions
+  return predictions_uncertainties
 
 
 def scale_dimension(dim, scale):
