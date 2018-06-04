@@ -234,11 +234,9 @@ def predict_labels_uncertainty(images,
       predictions_uncertainties[output] = mean_prediction
 
   # Adding uncertainty values generated from Monte Carlo trials
-  variation_ratio = uncertainty_metrics.variation_ratio(mc_logit_outputs)
   predictive_entropy = uncertainty_metrics.predictive_entropy(mc_logit_outputs)
   mutual_information = uncertainty_metrics.mutual_information(mc_logit_outputs)
 
-  predictions_uncertainties[uncertainty_metrics.VARIATION_RATIO] = tf.squeeze(variation_ratio)
   predictions_uncertainties[uncertainty_metrics.PREDICTIVE_ENTROPY] = tf.squeeze(predictive_entropy)
   predictions_uncertainties[uncertainty_metrics.MUTUAL_INFORMATION] = tf.squeeze(mutual_information)
 

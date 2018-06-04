@@ -119,7 +119,6 @@ def main(unused_argv):
                                                    num_MC_trials=FLAGS.number_monte_carlo_trials)
 
     mean_prediction = predictions[common.OUTPUT_TYPE]
-    variation_ratio = predictions[uncertainty_metrics.VARIATION_RATIO]
     predictive_entropy = predictions[uncertainty_metrics.PREDICTIVE_ENTROPY]
     mutual_information = predictions[uncertainty_metrics.MUTUAL_INFORMATION]
 
