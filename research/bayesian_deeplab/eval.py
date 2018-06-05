@@ -122,8 +122,21 @@ def main(unused_argv):
     predictive_entropy = predictions[uncertainty_metrics.PREDICTIVE_ENTROPY]
     mutual_information = predictions[uncertainty_metrics.MUTUAL_INFORMATION]
 
-    mean_prediction = tf.reshape(mean_prediction, shape=[-1])
-    labels = tf.reshape(samples[common.LABEL], shape=[-1])
+    #mean_prediction = tf.reshape(mean_prediction, shape=[-1])
+    #labels = tf.reshape(samples[common.LABEL], shape=[-1])
+
+    #TODO: Remove the shape code below!
+    mean_prediction_shape = mean_prediction.get_shape().as_list()
+    predictive_entropy_shape = predictive_entropy.get_shape().as_list()
+    mutual_information_shape = mutual_information.get_shape().as_list()
+    tf.logging.info('Mean prediction shape: ' + str(mean_prediction_shape))
+    tf.logging.info('Predictive entropy shape: ' + str(predictive_entropy_shape))
+    tf.logging.info('Mutual information shape: ' + str(mutual_information_shape))
+
+
+    # Exiting here for now !!
+    exit(0)
+
     weights = tf.to_float(tf.not_equal(labels, dataset.ignore_label))
 
     # Set ignore_label regions to label 0, because metrics.mean_iou requires
@@ -141,10 +154,12 @@ def main(unused_argv):
     # Define the evaluation metric.
     metric_map = {}
     metric_map[predictions_tag] = tf.metrics.mean_iou(
-        predictions, labels, dataset.num_classes, weights=weights)
+        mean_prediction, labels, dataset.num_classes, weights=weights)
+
+    # TODO: Check if we want to insert some evaluation metric using the uncertainty values
 
     metrics_to_values, metrics_to_updates = (
-        tf.contrib.metrics.aggregate_metric_map(metric_map))
+      tf.contrib.metrics.aggregate_metric_map(metric_map))
 
     for metric_name, metric_value in six.iteritems(metrics_to_values):
       slim.summaries.add_scalar_summary(
