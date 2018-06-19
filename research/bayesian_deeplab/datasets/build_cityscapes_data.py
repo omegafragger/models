@@ -102,7 +102,6 @@ _DATA_FORMAT_MAP = {
 # Image file pattern.
 _IMAGE_FILENAME_RE = re.compile('(.+)' + _POSTFIX_MAP['image'])
 
-
 def _get_files(data, dataset_split):
   """Gets files for the specified data type and dataset split.
 
@@ -176,7 +175,7 @@ def _convert_dataset(dataset_split):
 def main(unused_argv):
   # Only support converting 'train' and 'val' sets for now.
   for dataset_split in ['train', 'val']:
-    _convert_dataset(dataset_split)
+    convert_dataset(dataset_split)
 
 
 if __name__ == '__main__':
